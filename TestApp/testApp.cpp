@@ -43,6 +43,12 @@ int main()
 		cout << xArray[i] << endl;
 	}
 
+	CComPtr<BDA::IBDASpecData> pSpecData;
+	for(int i=0; i<=dataPoints; i++) {
+		hr = pMSDataReader ->GetSpectrum(i, &pSpecData);
+		assert (hr == S_OK);
+	}
+
 	cout << endl << "Break" << endl << endl;
 
 	double* yArray = NULL;
