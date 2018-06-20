@@ -1,4 +1,4 @@
-﻿Build started 6/18/2018 6:13:23 PM.
+﻿Build started 6/19/2018 6:48:21 PM.
      1>Project "C:\MHDAC_MIDAC_Package\TestApps\TestApp\TestApp\TestApp.vcxproj" on node 2 (build target(s)).
      1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(299,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
      1>InitializeBuildStatus:
@@ -6,9 +6,17 @@
        ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt testApp.cpp
          testApp.cpp
-     1>c:\mhdac_midac_package\testapps\testapp\testapp\testapp.cpp(48): error C2660: 'IMsdrDataReader::GetSpectrum' : function does not take 2 arguments
-     1>Done Building Project "C:\MHDAC_MIDAC_Package\TestApps\TestApp\TestApp\TestApp.vcxproj" (build target(s)) -- FAILED.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\..\..\MHDAC_32bit\bin\TestApp.exe" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\TestApp.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\MHDAC_MIDAC_Package\MHDAC_32bit\bin\TestApp.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\..\..\MHDAC_32bit\bin\TestApp.lib" /MACHINE:X86 Debug\testApp.obj
+         LINK : ..\..\..\MHDAC_32bit\bin\TestApp.exe not found or not built by the last incremental link; performing full link
+         TestApp.vcxproj -> C:\MHDAC_MIDAC_Package\TestApps\TestApp\TestApp\..\..\..\MHDAC_32bit\bin\TestApp.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"..\..\..\MHDAC_32bit\bin\TestApp.exe;#1" /manifest Debug\TestApp.exe.intermediate.manifest
+       FinalizeBuildStatus:
+         Deleting file "Debug\TestApp.unsuccessfulbuild".
+         Touching "Debug\TestApp.lastbuildstate".
+     1>Done Building Project "C:\MHDAC_MIDAC_Package\TestApps\TestApp\TestApp\TestApp.vcxproj" (build target(s)).
 
-Build FAILED.
+Build succeeded.
 
-Time Elapsed 00:00:02.13
+Time Elapsed 00:00:03.30
