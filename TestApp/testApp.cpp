@@ -23,7 +23,39 @@ int main()
 		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_6.d",
 		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_7.d",
 		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_8.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_9.d"
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_9.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_10.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_11.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_12.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_13.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_14.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_15.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_16.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_17.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_18.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_19.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_20.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_21.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_22.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_23.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_24.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_25.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_26.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_27.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_28.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_29.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_30.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_31.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_32.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_33.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_34.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_35.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_36.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_37.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_38.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_39.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_40.d",
+		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_41.d"
 	};
 
 	for (int path=0; path<sizeof(filePaths)/sizeof(*filePaths); path++) {
@@ -31,20 +63,6 @@ int main()
 		hr = CoCreateInstance( CLSID_MassSpecDataReader, NULL, CLSCTX_INPROC_SERVER,	
 				IID_IMsdrDataReader, (void**)&pMSDataReader);
 		assert (hr == S_OK);
-
-		__int64 totalDataPoints = 0;
-		CComPtr<BDA::IBDAMSScanFileInformation> pScanInfo;
-		hr = pMSDataReader->get_MSScanFileInformation(&pScanInfo);
-		assert (hr == S_OK);
-		hr = pScanInfo->get_TotalScansPresent(&totalDataPoints);
-		assert (hr == S_OK);
-
-		cout << "Number of data points (scans): " << totalDataPoints << endl << endl;
-
-	/*	CComPtr<BDA::IBDAMSScanFileInformation> fileInfo;
-		hr = pMSDataReader ->get_MSScanFileInformation(&fileInfo);
-		assert (hr == S_OK);
-		fileInfo;*/
 
 		VARIANT_BOOL pRetVal = VARIANT_TRUE;
 		hr = pMSDataReader->OpenDataFile(filePaths[path], &pRetVal);
@@ -57,86 +75,104 @@ int main()
 		long dataPoints = 0;
 		hr = pChromData->get_TotalDataPoints(&dataPoints);
 		assert (hr == S_OK);
-		cout << "Number of data points: " << dataPoints << endl << endl;
+		//cout << "Number of data points: " << dataPoints << endl << endl;
 
-		double* xArray = NULL;
-		SAFEARRAY *safeXArray = NULL;
-		hr = pChromData->get_XArray(&safeXArray);
-		assert (hr == S_OK);
-		SafeArrayAccessData(safeXArray, reinterpret_cast<void**>(&xArray));
-		SafeArrayUnaccessData(safeXArray);
-		cout << "X Array: ";
-		for(int i=0; i<=dataPoints; i++) {
-			cout << xArray[i] << ", ";
+		if (path < 10) {
+			cout << 0;
 		}
-		cout << endl << endl;
+		cout << path << ": ";
 
-		//CComPtr<BDA::IBDASpecData> pSpecData;
-		//hr = pMSDataReader ->GetSpectrum_6(0, NULL, NULL, &pSpecData);
-		//pSpecData;
-		//assert (hr == S_OK);
+		for(int scan=0; scan < dataPoints && scan < 41; scan++) {
 
-		double* yArray = NULL;
-		SAFEARRAY *safeYArray = NULL;
-		hr = pChromData->get_YArray(&safeYArray);
-		assert (hr == S_OK);
-		SafeArrayAccessData(safeYArray, reinterpret_cast<void**>(&yArray));
-		SafeArrayUnaccessData(safeYArray);
-		cout << "Y Array: ";
-		for(int i=0; i<=dataPoints; i++) {
-			cout << yArray[i] << ", ";
-		}
-		cout << endl << endl;
+			CComPtr<IBDASpecFilter> specFilter;
 
-		IRange* timeRange;
-		SAFEARRAY *safeTimeArray = NULL;
-		hr = pChromData->get_AcquiredTimeRange(&safeTimeArray);
-		assert (hr == S_OK);
-		SafeArrayAccessData(safeTimeArray, reinterpret_cast<void**>(&timeRange));
-		SafeArrayUnaccessData(safeTimeArray);
-		/*cout << "Time Range: " << endl;
-		double start, end;
-		for(int i=0; i<=dataPoints; i++) {
-			hr = timeRange[i].get_Start(&start);
+			hr = CoCreateInstance( CLSID_BDAChromFilter, NULL, 
+											CLSCTX_INPROC_SERVER ,	
+											IID_IBDAChromFilter, 
+											(void**)&specFilter);
+			if ( S_OK != hr )
+			{
+				//cout << "You broke it." << endl;
+			}
+
+			specFilter->put_SpectrumType(SpecType::SpecType_MassSpectrum);
+			specFilter->put_DesiredMSStorageType(DesiredMSStorageType_Profile);
+
+			CComPtr<IMSScanRecord> outputData = NULL;
+			hr = pMSDataReader ->GetScanRecord(scan, &outputData);
 			assert (hr == S_OK);
-			cout << "\tStart: " << start << endl;
-			hr = timeRange[i].get_End(&end);
+			outputData;
+
+			double retentionTime = 0;
+			hr = outputData ->get_retentionTime(&retentionTime);
 			assert (hr == S_OK);
-			cout << "\tEnd: " << end << endl;
+			MSScanType scanType;
+			hr = outputData ->get_MSScanType(&scanType);
+			assert (hr == S_OK);
+			IonPolarity ionPolarity;
+			hr = outputData ->get_ionPolarity(&ionPolarity);
+			assert (hr == S_OK);
+			IonizationMode ionizationMode;
+			hr = outputData ->get_IonizationMode(&ionizationMode);
+			assert (hr == S_OK);
+			//cout << "Retention time = " << retentionTime << endl;
+			//cout << "Scan type = " << scanType << endl;
+			//cout << "Ion Polarity = " << ionPolarity << endl;
+			//cout << "Ionization mode = " << ionizationMode << endl;
+			CComPtr<IBDASpecData> spectrum;
+			hr = pMSDataReader ->GetSpectrum(retentionTime, scanType, ionPolarity, ionizationMode, NULL, &spectrum);
+			if (hr == S_OK) {
+				//cout << endl << "Spectrum loaded successfully." << endl << endl;
+				cout << 'Y';
+
+			} else {
+				//cout << endl << "Spectrum failed to load. Check source file and try again." << endl << endl;
+				cout << 'N';
+				continue;
+			}
+
+			//long dataPoints = 0;
+			hr = spectrum->get_TotalDataPoints(&dataPoints);
+			assert (hr == S_OK);
+			//cout << "Number of data points: " << dataPoints << endl << endl;
+
+			double* xArray = NULL;
+			SAFEARRAY *safeXArray = NULL;
+			hr = spectrum->get_XArray(&safeXArray);
+			assert (hr == S_OK);
+			SafeArrayAccessData(safeXArray, reinterpret_cast<void**>(&xArray));
+			SafeArrayUnaccessData(safeXArray);
+			//cout << "X Array: ";
+			for(int i=0; i<=dataPoints && i<=100; i++) {
+				//cout << xArray[i] << ", ";
+			}
+			//cout << endl << endl;
+
+			double* yArray = NULL;
+			SAFEARRAY *safeYArray = NULL;
+			hr = spectrum->get_YArray(&safeYArray);
+			assert (hr == S_OK);
+			SafeArrayAccessData(safeYArray, reinterpret_cast<void**>(&yArray));
+			SafeArrayUnaccessData(safeYArray);
+			//cout << "Y Array: ";
+			for(int i=0; i<=dataPoints && i<=100; i++) {
+				//cout << yArray[i] << ", ";
+			}
+			//cout << endl << endl;
+
+			IRange* timeRange;
+			SAFEARRAY *safeTimeArray = NULL;
+			hr = pChromData->get_AcquiredTimeRange(&safeTimeArray);
+			assert (hr == S_OK);
+			SafeArrayAccessData(safeTimeArray, reinterpret_cast<void**>(&timeRange));
+			SafeArrayUnaccessData(safeTimeArray);
+
+			//cout << path << ":" << scan << endl;
+
+			//cout << "--------------------------------------------------" << endl << endl;
 		}
-		cout << endl << endl;*/
 
-		//CComPtr<IRange> massRange;
-		//SAFEARRAY *safeMassArray = NULL;
-		//hr = pChromData->get_MeasuredMassRange(&safeMassArray);
-		//assert (hr == S_OK);
-		//SafeArrayAccessData(safeMassArray, reinterpret_cast<void**>(&massRange));
-		//SafeArrayUnaccessData(safeTimeArray);
-		//cout << "Mass Range: " << endl;
-		//double start, end;
-		//VARIANT_BOOL isEmpty;
-		//hr = massRange->IsEmpty(&isEmpty);
-		//assert (hr == S_OK);
-		//cout << "\tIs Empty: ";
-		//if (isEmpty == VARIANT_TRUE) {
-		//	cout << "true" << endl;
-		//} else {
-		//	cout << "false" << endl;
-		//}
-		//hr = massRange->get_Start(&start);
-		//assert (hr == S_OK);
-		//cout << "\tStart: " << start << endl;
-		//hr = massRange->get_End(&end);
-		//assert (hr == S_OK);
-		//cout << "\tEnd: " << end << endl;
-		//cout << endl << endl;
-
-		long numPoints = 0;
-		hr = pChromData->get_TotalDataPoints(&numPoints);
-		assert (hr == S_OK);
-		cout << "Total # of points: " << numPoints << endl << endl;
-
-		cout << "--------------------------------------------------" << endl << endl;
+		cout << endl;
 	}
 
 	system("Pause");
