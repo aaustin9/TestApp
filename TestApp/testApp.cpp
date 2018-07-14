@@ -95,32 +95,8 @@ int main()
 				//cout << "You broke it." << endl;
 			}
 
-			specFilter->put_SpectrumType(SpecType::SpecType_MassSpectrum);
-			specFilter->put_DesiredMSStorageType(DesiredMSStorageType_Profile);
-
-			CComPtr<IMSScanRecord> outputData = NULL;
-			hr = pMSDataReader ->GetScanRecord(scan, &outputData);
-			assert (hr == S_OK);
-			outputData;
-
-			double retentionTime = 0;
-			hr = outputData ->get_retentionTime(&retentionTime);
-			assert (hr == S_OK);
-			MSScanType scanType;
-			hr = outputData ->get_MSScanType(&scanType);
-			assert (hr == S_OK);
-			IonPolarity ionPolarity;
-			hr = outputData ->get_ionPolarity(&ionPolarity);
-			assert (hr == S_OK);
-			IonizationMode ionizationMode;
-			hr = outputData ->get_IonizationMode(&ionizationMode);
-			assert (hr == S_OK);
-			//cout << "Retention time = " << retentionTime << endl;
-			//cout << "Scan type = " << scanType << endl;
-			//cout << "Ion Polarity = " << ionPolarity << endl;
-			//cout << "Ionization mode = " << ionizationMode << endl;
 			CComPtr<IBDASpecData> spectrum;
-			hr = pMSDataReader ->GetSpectrum(retentionTime, scanType, ionPolarity, ionizationMode, NULL, &spectrum);
+			hr = pMSDataReader ->GetSpectrum_6(scan, NULL, NULL, &spectrum);
 			if (hr == S_OK) {
 				//cout << endl << "Spectrum loaded successfully." << endl << endl;
 				cout << 'Y';
@@ -160,12 +136,7 @@ int main()
 			}
 			//cout << endl << endl;
 
-			IRange* timeRange;
-			SAFEARRAY *safeTimeArray = NULL;
-			hr = pChromData->get_AcquiredTimeRange(&safeTimeArray);
-			assert (hr == S_OK);
-			SafeArrayAccessData(safeTimeArray, reinterpret_cast<void**>(&timeRange));
-			SafeArrayUnaccessData(safeTimeArray);
+			//system("pause");
 
 			//cout << path << ":" << scan << endl;
 
