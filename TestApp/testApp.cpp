@@ -5,6 +5,8 @@
 #include <vector>
 #include <windows.h>
 #include <shobjidl.h> 
+#include <string>
+#include <filesystem>
 #include "mat.h"
 
 #import "BaseCommon.tlb" raw_interfaces_only, no_namespace, named_guids
@@ -13,11 +15,13 @@
 
 using namespace std;
 using namespace BDA;
+namespace fs = std::experimental::filesystem;
+
 int main()
 {
 	CoInitialize(NULL);
 	
-	int pixelSizeX = 80, pixelSizeY = 80;
+	int pixelSizeX = 0, pixelSizeY = 0;
 	int xSize = 41, ySize = 41, zSize = 0;
 	int current = 0, maxLength = 0;
 
@@ -26,74 +30,52 @@ int main()
 	double * matrix, * zVals;
 	bool matrixDefined = false;
 	vector<float> v;
+	vector<wstring> spectrumFiles;
+	CComBSTR * filePaths;
+	
+	cout << "Enter integer lengths for pixel width and pixel height." << endl;
+	cout << "Then, select the directory to read spectral data from." << endl;
+	cout << "Enter pixel width: ";
+	cin >> pixelSizeX;
+	cout << "Enter pixel height: ";
+	cin >> pixelSizeY;
+	IFileDialog *pfd = NULL;
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, 
+                      NULL, 
+                      CLSCTX_INPROC_SERVER, 
+                      IID_PPV_ARGS(&pfd));
+	assert (SUCCEEDED(hr));
+	DWORD dwOptions;
+    if (SUCCEEDED(pfd->GetOptions(&dwOptions)))
+        pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
+	hr = pfd->Show(NULL);
+	assert (SUCCEEDED(hr));
+	IShellItem *psiResult;
+    hr = pfd->GetResult(&psiResult);
+	assert (SUCCEEDED(hr));
+	PWSTR pszFilePath = NULL;
+	hr = psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+	assert (SUCCEEDED(hr));
+	wstring ws(pszFilePath);
+	wstring directoryPath(ws.begin(), ws.end()), directoryContent;
+	for (const auto & p : fs::directory_iterator(directoryPath)) {
+		directoryContent = p.path().wstring();
+		if (directoryContent.substr(directoryContent.length() - 2) == L".d")
+			spectrumFiles.push_back(directoryContent);
+	}
+	int numberOfFiles = spectrumFiles.size();
+	filePaths = new CComBSTR[numberOfFiles];
+	int position, index;
+	for (wstring p : spectrumFiles) {
+		position = p.length() - 3;
+		while (p[position] >= '0' && p[position] <= '9')
+			position--;
+		index = stoi(p.substr(position + 1, p.length() - 3 - position));
+		filePaths[index-1] = SysAllocStringLen(p.data(), p.size());
+	}
 
-	HRESULT hr = S_OK;
-	//DIR * dir;
-	//IFileDialog *pfd = NULL;
- //   HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, 
- //                     NULL, 
- //                     CLSCTX_INPROC_SERVER, 
- //                     IID_PPV_ARGS(&pfd));
-	//assert (SUCCEEDED(hr));
-	//DWORD dwOptions;
- //   if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
- //       pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
- //   }
-	//hr = pfd->Show(NULL);
-	//assert (SUCCEEDED(hr));
-	//IShellItem *psiResult;
- //   hr = pfd->GetResult(&psiResult);
-	//assert (SUCCEEDED(hr));
-	//PWSTR pszFilePath = NULL;
-	//hr = psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-	//assert (SUCCEEDED(hr));
-	//assert ((dir = opendir ("c:\\src\\")) != NULL);
-
-	CComBSTR filePaths[] = {
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_1.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_2.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_3.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_4.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_5.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_6.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_7.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_8.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_9.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_10.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_11.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_12.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_13.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_14.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_15.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_16.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_17.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_18.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_19.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_20.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_21.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_22.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_23.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_24.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_25.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_26.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_27.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_28.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_29.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_30.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_31.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_32.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_33.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_34.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_35.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_36.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_37.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_38.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_39.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_40.d",
-		"C:\\MHDAC_MIDAC_Package\\ExampleData\\rhodamine_test_image_figure4_41.d"
-	};
-
-	for (int path=0; path<sizeof(filePaths)/sizeof(*filePaths); path++) {
+	for (int path=0; path<numberOfFiles; path++) {
+		cout << "Reading path " << path + 1 << " of " << numberOfFiles << "\r";
 		CComPtr<IMsdrDataReader> pMSDataReader;
 		hr = CoCreateInstance( CLSID_MassSpecDataReader, NULL, CLSCTX_INPROC_SERVER,	
 				IID_IMsdrDataReader, (void**)&pMSDataReader);
@@ -111,11 +93,6 @@ int main()
 		hr = pChromData->get_TotalDataPoints(&dataPoints);
 		assert (hr == S_OK);
 
-		if (path < 10) {
-			cout << 0;
-		}
-		cout << path << ": ";
-
 		for(int scan=0; scan < dataPoints && scan < 41; scan++) {
 
 			CComPtr<IBDASpecFilter> specFilter;
@@ -132,7 +109,6 @@ int main()
 			v.clear();
 
 			if (hr == S_OK) {
-				cout << 'Y';
 				hr = spectrum->get_TotalDataPoints(&dataPoints);
 				assert (hr == S_OK);
 
@@ -166,19 +142,17 @@ int main()
 					copy(xArray, xArray + maxLength, zVals);
 				}
 
-			} else {
-				cout << 'N';
 			}
 
-			v.resize(maxLength, 0);
-			copy(v.begin(), v.end(), matrix + current);
-			current += maxLength;
+			if (maxLength > 0) {
+				v.resize(maxLength, 0);
+				copy(v.begin(), v.end(), matrix + current);
+				current += maxLength;
+			}
 		}
-
-		cout << endl;
 	}
 
-
+	cout << "Finished reading .d files. Generating MATLAB object." << endl;
 
 	MATFile *pmat;
     mxArray *img, *imgX, *imgY, *imgZ;
@@ -203,6 +177,8 @@ int main()
 	assert (status == 0);
 	delete matrix;
 
+	cout << "Finished processing intensities. Finalizing output." << endl;
+
 	mwSize dimsX[] = {1, xSize};
 	imgX = mxCreateNumericArray(2,dimsX, mxDOUBLE_CLASS, mxREAL);
 	assert (imgX != NULL);
@@ -211,7 +187,6 @@ int main()
 	for(int i=0; i<xSize; i++) {
 		xVals[i] = currentVal;
 		currentVal += pixelSizeX;
-		cout << i << " " << xVals[i] << endl;
 	}
 	start_of_pr = (double *)mxGetPr(imgX);
 	bytes_to_copy = xSize * mxGetElementSize(imgX);
@@ -252,6 +227,8 @@ int main()
 	mxDestroyArray(imgZ);
 
 	assert (matClose(pmat) == 0);
+
+	cout << "Done." << endl;
 
 	system("Pause");
 	return 0;

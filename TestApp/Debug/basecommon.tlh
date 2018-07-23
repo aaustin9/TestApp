@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 10.00.30319.01 (a96b2fb9).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 14.14.26433.0 (a96b2fb9).
 //
 // c:\mhdac_midac_package\testapps\testapp\testapp\debug\basecommon.tlh
 //
 // C++ source equivalent of Win32 type library BaseCommon.tlb
-// compiler-generated file created 06/11/18 at 16:24:35 - DO NOT EDIT!
+// compiler-generated file created 07/23/18 at 09:25:05 - DO NOT EDIT!
 
 #pragma once
 #pragma pack(push, 8)
