@@ -1,4 +1,4 @@
-﻿Build started 7/14/2018 12:05:20 PM.
+﻿Build started 7/20/2018 9:39:37 AM.
      1>Project "C:\MHDAC_MIDAC_Package\TestApps\TestApp\TestApp\TestApp.vcxproj" on node 2 (build target(s)).
      1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(299,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
      1>InitializeBuildStatus:
@@ -6,12 +6,21 @@
        ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt testApp.cpp
          testApp.cpp
+     1>c:\program files (x86)\microsoft visual studio 10.0\vc\include\xutility(2227): warning C4996: 'std::_Copy_impl': Function call with parameters that may be unsafe - this call relies on the caller to check that the passed values are correct. To disable this warning, use -D_SCL_SECURE_NO_WARNINGS. See documentation on how to use Visual C++ 'Checked Iterators'
+                 c:\program files (x86)\microsoft visual studio 10.0\vc\include\xutility(2212) : see declaration of 'std::_Copy_impl'
+                 c:\mhdac_midac_package\testapps\testapp\testapp\testapp.cpp(167) : see reference to function template instantiation '_OutIt std::copy<std::_Vector_iterator<_Myvec>,float*>(_InIt,_InIt,_OutIt)' being compiled
+                 with
+                 [
+                     _OutIt=float *,
+                     _Myvec=std::_Vector_val<float,std::allocator<float>>,
+                     _InIt=std::_Vector_iterator<std::_Vector_val<float,std::allocator<float>>>
+                 ]
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\..\..\MHDAC_32bit\bin\TestApp.exe" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\TestApp.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\MHDAC_MIDAC_Package\MHDAC_32bit\bin\TestApp.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\..\..\MHDAC_32bit\bin\TestApp.lib" /MACHINE:X86 Debug\testApp.obj
-         LINK : ..\..\..\MHDAC_32bit\bin\TestApp.exe not found or not built by the last incremental link; performing full link
-         TestApp.vcxproj -> C:\MHDAC_MIDAC_Package\TestApps\TestApp\TestApp\..\..\..\MHDAC_32bit\bin\TestApp.exe
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\..\..\MHDAC_MIDAC_64bit\bin\TestApp.exe" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\TestApp.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\MHDAC_MIDAC_Package\MHDAC_MIDAC_64bit\bin\TestApp.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\..\..\MHDAC_MIDAC_64bit\bin\TestApp.lib" /MACHINE:X86 Debug\testApp.obj
+         LINK : ..\..\..\MHDAC_MIDAC_64bit\bin\TestApp.exe not found or not built by the last incremental link; performing full link
+         TestApp.vcxproj -> C:\MHDAC_MIDAC_Package\TestApps\TestApp\TestApp\..\..\..\MHDAC_MIDAC_64bit\bin\TestApp.exe
        Manifest:
-         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"..\..\..\MHDAC_32bit\bin\TestApp.exe;#1" /manifest Debug\TestApp.exe.intermediate.manifest
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"..\..\..\MHDAC_MIDAC_64bit\bin\TestApp.exe;#1" /manifest Debug\TestApp.exe.intermediate.manifest
        FinalizeBuildStatus:
          Deleting file "Debug\TestApp.unsuccessfulbuild".
          Touching "Debug\TestApp.lastbuildstate".
@@ -19,4 +28,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.11
+Time Elapsed 00:00:02.77
