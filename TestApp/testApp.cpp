@@ -1,12 +1,11 @@
 #include <assert.h>
 #include <atlbase.h>
-#include <fstream>
+#include <filesystem>
 #include <iostream>
+#include <shobjidl.h>
+#include <string>
 #include <vector>
 #include <windows.h>
-#include <shobjidl.h> 
-#include <string>
-#include <filesystem>
 #include "mat.h"
 
 #import "BaseCommon.tlb" raw_interfaces_only, no_namespace, named_guids
@@ -21,7 +20,6 @@ int main()
 {
 	CoInitialize(NULL);
 
-	
 	int pixelSizeX = 0, pixelSizeY = 0;
 	int xSize = 0, ySize = 0, zSize = 0;
 	int current = 0, maxLength = 0;
@@ -33,7 +31,7 @@ int main()
 	vector<float> v;
 	vector<wstring> spectrumFiles;
 	CComBSTR * filePaths;
-	
+
 	cout << "Enter integer lengths for pixel width and pixel height." << endl;
 	cout << "Then, select the directory to read spectral data from." << endl;
 	cout << "Enter pixel width: ";
@@ -41,18 +39,18 @@ int main()
 	cout << "Enter pixel height: ";
 	cin >> pixelSizeY;
 	IFileDialog *pfd = NULL;
-    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, 
-                      NULL, 
-                      CLSCTX_INPROC_SERVER, 
-                      IID_PPV_ARGS(&pfd));
+	HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_PPV_ARGS(&pfd));
 	assert (SUCCEEDED(hr));
 	DWORD dwOptions;
-    if (SUCCEEDED(pfd->GetOptions(&dwOptions)))
-        pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
+	if (SUCCEEDED(pfd->GetOptions(&dwOptions)))
+		pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
 	hr = pfd->Show(NULL);
 	assert (SUCCEEDED(hr));
 	IShellItem *psiResult;
-    hr = pfd->GetResult(&psiResult);
+	hr = pfd->GetResult(&psiResult);
 	assert (SUCCEEDED(hr));
 	PWSTR pszFilePath = NULL;
 	hr = psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
@@ -79,7 +77,7 @@ int main()
 	for (int path=0; path<numberOfFiles; path++) {
 		cout << "Reading path " << path + 1 << " of " << numberOfFiles << "\r";
 		CComPtr<IMsdrDataReader> pMSDataReader;
-		hr = CoCreateInstance( CLSID_MassSpecDataReader, NULL, CLSCTX_INPROC_SERVER,	
+		hr = CoCreateInstance(CLSID_MassSpecDataReader, NULL, CLSCTX_INPROC_SERVER,
 				IID_IMsdrDataReader, (void**)&pMSDataReader);
 		assert (hr == S_OK);
 
@@ -87,73 +85,67 @@ int main()
 		hr = pMSDataReader->OpenDataFile(filePaths[path], &pRetVal);
 		assert (hr == S_OK);
 
-		CComPtr<BDA::IBDAChromData> pChromData;	
-		hr = pMSDataReader ->GetTIC(&pChromData);
+		CComPtr<BDA::IBDAChromData> pChromData;
+		hr = pMSDataReader->GetTIC(&pChromData);
 		assert (hr == S_OK);
 
-		long spectrumPoints = 0;
-		hr = pChromData->get_TotalDataPoints(&spectrumPoints);
-		assert (hr == S_OK);
-
+		long dataPoints = 0;
+		hr = pChromData->get_TotalDataPoints(&dataPoints);
 		if (xSize == 0)
-			xSize = spectrumPoints;
+			xSize = dataPoints;
+		assert (hr == S_OK);
 
-		for(int scan=0; scan < spectrumPoints && scan < xSize; scan++) {
-
-			CComPtr<IBDASpecFilter> specFilter;
-
-			hr = CoCreateInstance( CLSID_BDAChromFilter, NULL, 
-											CLSCTX_INPROC_SERVER ,	
-											IID_IBDAChromFilter, 
-											(void**)&specFilter);
-			assert (hr == S_OK);
-
-			CComPtr<IBDASpecData> spectrum;
-			hr = pMSDataReader ->GetSpectrum_6(scan, NULL, NULL, &spectrum);
+		for (int scan = 0; scan < xSize; scan++) {
 
 			v.clear();
 
-			if (hr == S_OK) {
-				long dataPoints;
-				hr = spectrum->get_TotalDataPoints(&dataPoints);
+			if (scan < dataPoints) {
+				CComPtr<IBDASpecFilter> specFilter;
+
+				hr = CoCreateInstance(CLSID_BDAChromFilter, NULL,
+					CLSCTX_INPROC_SERVER,
+					IID_IBDAChromFilter,
+					(void**)&specFilter);
 				assert (hr == S_OK);
 
-				float* yArray = NULL;
-				SAFEARRAY *safeYArray = NULL;
-				hr = spectrum->get_YArray(&safeYArray);
-				assert (hr == S_OK);
-				SafeArrayGetLBound(safeYArray, 1, &lBound);
-				SafeArrayGetUBound(safeYArray, 1, &uBound);
-				SafeArrayAccessData(safeYArray, reinterpret_cast<void**>(&yArray));
+				CComPtr<IBDASpecData> spectrum;
+				hr = pMSDataReader->GetSpectrum_6(scan, NULL, NULL, &spectrum);
 
-				v.assign(yArray, yArray + uBound - lBound + 1);
-				SafeArrayUnaccessData(safeYArray);
-
-				if (!matrixDefined) {
-					assert (scan == 0);
-					maxLength = v.size();
-					matrix = new double[(ySize-path) * xSize * maxLength];
-					ySize = ySize - path;
-					zSize = maxLength;
-					matrixDefined = true;
-
-					double* xArray = NULL;
-					SAFEARRAY *safeXArray = NULL;
-					hr = spectrum->get_XArray(&safeXArray);
+				if (hr == S_OK) {
+					float* yArray = NULL;
+					SAFEARRAY *safeYArray = NULL;
+					hr = spectrum->get_YArray(&safeYArray);
 					assert (hr == S_OK);
-					SafeArrayGetLBound(safeXArray, 1, &lBound);
-					SafeArrayGetUBound(safeXArray, 1, &uBound);
-					SafeArrayAccessData(safeXArray, reinterpret_cast<void**>(&xArray));
-					zVals = new double[zSize];
-					copy(xArray, xArray + maxLength, zVals);
+					SafeArrayGetLBound(safeYArray, 1, &lBound);
+					SafeArrayGetUBound(safeYArray, 1, &uBound);
+					SafeArrayAccessData(safeYArray, reinterpret_cast<void**>(&yArray));
+
+					v.assign(yArray, yArray + uBound - lBound + 1);
+					SafeArrayUnaccessData(safeYArray);
+
+					if (!matrixDefined) {
+						assert (scan == 0);
+						maxLength = v.size();
+						ySize -= path;
+						zSize = maxLength;
+						matrix = new double[ySize * xSize * maxLength];
+						matrixDefined = true;
+
+						double* xArray = NULL;
+						SAFEARRAY *safeXArray = NULL;
+						hr = spectrum->get_XArray(&safeXArray);
+						assert (hr == S_OK);
+						SafeArrayGetLBound(safeXArray, 1, &lBound);
+						SafeArrayGetUBound(safeXArray, 1, &uBound);
+						SafeArrayAccessData(safeXArray, reinterpret_cast<void**>(&xArray));
+						zVals = new double[zSize];
+						copy(xArray, xArray + maxLength, zVals);
+					}
+
 				}
-
-			}
-			else {
-				cout << "Failed at " << path << " " << scan << endl;
 			}
 
-			if (maxLength > 0) {
+			if (matrixDefined) {
 				v.resize(maxLength, 0);
 				copy(v.begin(), v.end(), matrix + current);
 				current += maxLength;
@@ -162,9 +154,10 @@ int main()
 	}
 
 	cout << "Finished reading .d files. Generating MATLAB object." << endl;
+	cout << "This may take several minutes to complete." << endl;
 
 	MATFile *pmat;
-    mxArray *img, *imgX, *imgY, *imgZ;
+	mxArray *img, *imgX, *imgY, *imgZ;
 
 	const char *file = "mattest.mat";
 	char str[256];
@@ -176,7 +169,7 @@ int main()
 	pmat = matOpen(file, "w");
 	assert (pmat != NULL);
 
-	mwSize dims[] = {zSize, xSize, ySize};
+	mwSize dims[] = { zSize, xSize, ySize };
 	img = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
 	assert (img != NULL);
 	start_of_pr = (double *)mxGetPr(img);
@@ -188,12 +181,12 @@ int main()
 
 	cout << "Finished processing intensities. Finalizing output." << endl;
 
-	mwSize dimsX[] = {1, xSize};
-	imgX = mxCreateNumericArray(2,dimsX, mxDOUBLE_CLASS, mxREAL);
+	mwSize dimsX[] = { 1, xSize };
+	imgX = mxCreateNumericArray(2, dimsX, mxDOUBLE_CLASS, mxREAL);
 	assert (imgX != NULL);
 	xVals = new double[xSize];
 	currentVal = pixelSizeX/2;
-	for(int i=0; i<xSize; i++) {
+	for (int i=0; i<xSize; i++) {
 		xVals[i] = currentVal;
 		currentVal += pixelSizeX;
 	}
@@ -204,12 +197,12 @@ int main()
 	assert (status == 0);
 	delete xVals;
 
-	mwSize dimsY[] = {1, ySize};
-	imgY = mxCreateNumericArray(2,dimsY, mxDOUBLE_CLASS, mxREAL);
+	mwSize dimsY[] = { 1, ySize };
+	imgY = mxCreateNumericArray(2, dimsY, mxDOUBLE_CLASS, mxREAL);
 	assert (imgY != NULL);
 	yVals = new double[ySize];
 	currentVal = pixelSizeY/2;
-	for(int i=0; i<ySize; i++) {
+	for (int i=0; i<ySize; i++) {
 		yVals[i] = currentVal;
 		currentVal += pixelSizeY;
 	}
@@ -220,7 +213,7 @@ int main()
 	assert (status == 0);
 	delete yVals;
 
-	mwSize dimsZ[] = {zSize, 1};
+	mwSize dimsZ[] = { zSize, 1 };
 	imgZ = mxCreateNumericArray(2, dimsZ, mxDOUBLE_CLASS, mxREAL);
 	assert (imgZ != NULL);
 	start_of_pr = (double *)mxGetPr(imgZ);
