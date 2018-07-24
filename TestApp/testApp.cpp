@@ -20,9 +20,10 @@ namespace fs = std::experimental::filesystem;
 int main()
 {
 	CoInitialize(NULL);
+
 	
 	int pixelSizeX = 0, pixelSizeY = 0;
-	int xSize = 41, ySize = 41, zSize = 0;
+	int xSize = 0, ySize = 0, zSize = 0;
 	int current = 0, maxLength = 0;
 
 	LONG lBound, uBound, count;
@@ -64,6 +65,7 @@ int main()
 			spectrumFiles.push_back(directoryContent);
 	}
 	int numberOfFiles = spectrumFiles.size();
+	ySize = numberOfFiles;
 	filePaths = new CComBSTR[numberOfFiles];
 	int position, index;
 	for (wstring p : spectrumFiles) {
@@ -89,11 +91,14 @@ int main()
 		hr = pMSDataReader ->GetTIC(&pChromData);
 		assert (hr == S_OK);
 
-		long dataPoints = 0;
-		hr = pChromData->get_TotalDataPoints(&dataPoints);
+		long spectrumPoints = 0;
+		hr = pChromData->get_TotalDataPoints(&spectrumPoints);
 		assert (hr == S_OK);
 
-		for(int scan=0; scan < dataPoints && scan < 41; scan++) {
+		if (xSize == 0)
+			xSize = spectrumPoints;
+
+		for(int scan=0; scan < spectrumPoints && scan < xSize; scan++) {
 
 			CComPtr<IBDASpecFilter> specFilter;
 
@@ -109,6 +114,7 @@ int main()
 			v.clear();
 
 			if (hr == S_OK) {
+				long dataPoints;
 				hr = spectrum->get_TotalDataPoints(&dataPoints);
 				assert (hr == S_OK);
 
@@ -126,8 +132,8 @@ int main()
 				if (!matrixDefined) {
 					assert (scan == 0);
 					maxLength = v.size();
-					matrix = new double[(41-path) * 41 * maxLength];
-					ySize = 41-path;
+					matrix = new double[(ySize-path) * xSize * maxLength];
+					ySize = ySize - path;
 					zSize = maxLength;
 					matrixDefined = true;
 
@@ -142,6 +148,9 @@ int main()
 					copy(xArray, xArray + maxLength, zVals);
 				}
 
+			}
+			else {
+				cout << "Failed at " << path << " " << scan << endl;
 			}
 
 			if (maxLength > 0) {
