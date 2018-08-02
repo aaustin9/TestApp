@@ -12,70 +12,37 @@
 #import "BaseDataAccess.tlb" raw_interfaces_only, rename_namespace("BDA"), named_guids
 #import "MassSpecDataReader.tlb" raw_interfaces_only, no_namespace, named_guids
 
-using namespace std;
-using namespace BDA;
 namespace fs = std::experimental::filesystem;
+
+std::vector<std::wstring> getFoldersFromUserSpecifiedDirectory();
+CComBSTR* sortFoldersByNumberInPath(std::vector<std::wstring> list, int size);
+bool writeArrayToMATFile(mwSize dimensions[], int numberOfDimensions, double* vals, char variableName[], MATFile &pmat);
+double* generateAxisArray(int length, int pixelSize);
 
 int main()
 {
 	CoInitialize(NULL);
+	HRESULT hr = S_OK;
 
-	int pixelSizeX = 0, pixelSizeY = 0;
-	int xSize = 0, ySize = 0, zSize = 0;
-	int current = 0, maxLength = 0;
-
+	mwSize current = 0, pixelSizeX = 0, pixelSizeY = 0, xSize = 0, ySize = 0, zSize = 0;
 	LONG lBound, uBound, count;
-
-	double * matrix, * zVals;
+	double *matrix, *zVals;
 	bool matrixDefined = false;
-	vector<float> v;
-	vector<wstring> spectrumFiles;
-	CComBSTR * filePaths;
+	std::vector<float> v;
 
-	cout << "Enter integer lengths for pixel width and pixel height." << endl;
-	cout << "Then, select the directory to read spectral data from." << endl;
-	cout << "Enter pixel width: ";
-	cin >> pixelSizeX;
-	cout << "Enter pixel height: ";
-	cin >> pixelSizeY;
-	IFileDialog *pfd = NULL;
-	HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_PPV_ARGS(&pfd));
-	assert (SUCCEEDED(hr));
-	DWORD dwOptions;
-	if (SUCCEEDED(pfd->GetOptions(&dwOptions)))
-		pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
-	hr = pfd->Show(NULL);
-	assert (SUCCEEDED(hr));
-	IShellItem *psiResult;
-	hr = pfd->GetResult(&psiResult);
-	assert (SUCCEEDED(hr));
-	PWSTR pszFilePath = NULL;
-	hr = psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-	assert (SUCCEEDED(hr));
-	wstring ws(pszFilePath);
-	wstring directoryPath(ws.begin(), ws.end()), directoryContent;
-	for (const auto & p : fs::directory_iterator(directoryPath)) {
-		directoryContent = p.path().wstring();
-		if (directoryContent.substr(directoryContent.length() - 2) == L".d")
-			spectrumFiles.push_back(directoryContent);
-	}
-	int numberOfFiles = spectrumFiles.size();
-	ySize = numberOfFiles;
-	filePaths = new CComBSTR[numberOfFiles];
-	int position, index;
-	for (wstring p : spectrumFiles) {
-		position = p.length() - 3;
-		while (p[position] >= '0' && p[position] <= '9')
-			position--;
-		index = stoi(p.substr(position + 1, p.length() - 3 - position));
-		filePaths[index-1] = SysAllocStringLen(p.data(), p.size());
-	}
+	std::cout << "Enter integer lengths for pixel width and pixel height." << std::endl;
+	std::cout << "Then, select the directory to read spectral data from." << std::endl;
+	std::cout << "Enter pixel width: ";
+	std::cin >> pixelSizeX;
+	std::cout << "Enter pixel height: ";
+	std::cin >> pixelSizeY;
 
-	for (int path=0; path<numberOfFiles; path++) {
-		cout << "Reading path " << path + 1 << " of " << numberOfFiles << "\r";
+	std::vector<std::wstring> spectrumFiles = getFoldersFromUserSpecifiedDirectory();
+	ySize = spectrumFiles.size();
+	CComBSTR *filePaths = sortFoldersByNumberInPath(spectrumFiles, ySize);
+
+	for (int path = 0; path < ySize; path++) {
+		std::cout << "Reading path " << path + 1 << " of " << ySize << "\r";
 		CComPtr<IMsdrDataReader> pMSDataReader;
 		hr = CoCreateInstance(CLSID_MassSpecDataReader, NULL, CLSCTX_INPROC_SERVER,
 				IID_IMsdrDataReader, (void**)&pMSDataReader);
@@ -100,15 +67,15 @@ int main()
 			v.clear();
 
 			if (scan < dataPoints) {
-				CComPtr<IBDASpecFilter> specFilter;
+				CComPtr<BDA::IBDASpecFilter> specFilter;
 
-				hr = CoCreateInstance(CLSID_BDAChromFilter, NULL,
+				hr = CoCreateInstance(BDA::CLSID_BDAChromFilter, NULL,
 					CLSCTX_INPROC_SERVER,
-					IID_IBDAChromFilter,
+					BDA::IID_IBDAChromFilter,
 					(void**)&specFilter);
 				assert (hr == S_OK);
 
-				CComPtr<IBDASpecData> spectrum;
+				CComPtr<BDA::IBDASpecData> spectrum;
 				hr = pMSDataReader->GetSpectrum_6(scan, NULL, NULL, &spectrum);
 
 				if (hr == S_OK) {
@@ -125,10 +92,9 @@ int main()
 
 					if (!matrixDefined) {
 						assert (scan == 0);
-						maxLength = v.size();
+						zSize = v.size();
 						ySize -= path;
-						zSize = maxLength;
-						matrix = new double[ySize * xSize * maxLength];
+						matrix = new double[ySize * xSize * zSize];
 						matrixDefined = true;
 
 						double* xArray = NULL;
@@ -139,99 +105,118 @@ int main()
 						SafeArrayGetUBound(safeXArray, 1, &uBound);
 						SafeArrayAccessData(safeXArray, reinterpret_cast<void**>(&xArray));
 						zVals = new double[zSize];
-						copy(xArray, xArray + maxLength, zVals);
+						std::copy(xArray, xArray + zSize, zVals);
 					}
 
 				}
 			}
 
 			if (matrixDefined) {
-				v.resize(maxLength, 0);
+				v.resize(zSize, 0);
 				copy(v.begin(), v.end(), matrix + current);
-				current += maxLength;
+				current += zSize;
 			}
 		}
 	}
 
-	cout << "Finished reading .d files. Generating MATLAB object." << endl;
-	cout << "This may take several minutes to complete." << endl;
+	std::cout << "Finished reading .d files. Generating MATLAB object." << std::endl;
+	std::cout << "This may take several minutes to complete." << std::endl;
 
 	MATFile *pmat;
 	mxArray *img, *imgX, *imgY, *imgZ;
 
 	const char *file = "mattest.mat";
-	char str[256];
 	int status;
-	double * xVals, * yVals, currentVal;
-	double * start_of_pr;
+	double *xVals, *yVals, *start_of_pr;
+	double currentVal;
 	size_t bytes_to_copy;
 
 	pmat = matOpen(file, "w");
 	assert (pmat != NULL);
+	assert (writeArrayToMATFile(new mwSize[3]{ zSize, xSize, ySize }, 3, matrix, "img", *pmat));
+	std::cout << "Finished processing intensities. Finalizing output." << std::endl;
 
-	mwSize dims[] = { zSize, xSize, ySize };
-	img = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
-	assert (img != NULL);
-	start_of_pr = (double *)mxGetPr(img);
-	bytes_to_copy = xSize * ySize * zSize * mxGetElementSize(img);
-	memcpy(start_of_pr, matrix, bytes_to_copy);
-	status = matPutVariableAsGlobal(pmat, "img", img);
-	assert (status == 0);
-	delete matrix;
-
-	cout << "Finished processing intensities. Finalizing output." << endl;
-
-	mwSize dimsX[] = { 1, xSize };
-	imgX = mxCreateNumericArray(2, dimsX, mxDOUBLE_CLASS, mxREAL);
-	assert (imgX != NULL);
-	xVals = new double[xSize];
-	currentVal = pixelSizeX/2;
-	for (int i=0; i<xSize; i++) {
-		xVals[i] = currentVal;
-		currentVal += pixelSizeX;
-	}
-	start_of_pr = (double *)mxGetPr(imgX);
-	bytes_to_copy = xSize * mxGetElementSize(imgX);
-	memcpy(start_of_pr, xVals, bytes_to_copy);
-	status = matPutVariableAsGlobal(pmat, "imgX", imgX);
-	assert (status == 0);
-	delete xVals;
-
-	mwSize dimsY[] = { 1, ySize };
-	imgY = mxCreateNumericArray(2, dimsY, mxDOUBLE_CLASS, mxREAL);
-	assert (imgY != NULL);
-	yVals = new double[ySize];
-	currentVal = pixelSizeY/2;
-	for (int i=0; i<ySize; i++) {
-		yVals[i] = currentVal;
-		currentVal += pixelSizeY;
-	}
-	start_of_pr = (double *)mxGetPr(imgY);
-	bytes_to_copy = ySize * mxGetElementSize(imgY);
-	memcpy(start_of_pr, yVals, bytes_to_copy);
-	status = matPutVariableAsGlobal(pmat, "imgY", imgY);
-	assert (status == 0);
-	delete yVals;
-
-	mwSize dimsZ[] = { zSize, 1 };
-	imgZ = mxCreateNumericArray(2, dimsZ, mxDOUBLE_CLASS, mxREAL);
-	assert (imgZ != NULL);
-	start_of_pr = (double *)mxGetPr(imgZ);
-	bytes_to_copy = zSize * mxGetElementSize(imgZ);
-	memcpy(start_of_pr, zVals, bytes_to_copy);
-	status = matPutVariableAsGlobal(pmat, "imgZ", imgZ);
-	assert (status == 0);
-	delete zVals;
-
-	mxDestroyArray(img);
-	mxDestroyArray(imgX);
-	mxDestroyArray(imgY);
-	mxDestroyArray(imgZ);
-
+	assert (writeArrayToMATFile(new mwSize[2]{ 1, xSize }, 2, generateAxisArray(xSize, pixelSizeX), "imgX", *pmat));
+	assert (writeArrayToMATFile(new mwSize[2]{ 1, ySize }, 2, generateAxisArray(ySize, pixelSizeY), "imgY", *pmat));
+	assert (writeArrayToMATFile(new mwSize[2]{ zSize, 1 }, 2, zVals, "imgZ", *pmat));
 	assert (matClose(pmat) == 0);
 
-	cout << "Done." << endl;
-
+	std::cout << "Done." << std::endl;
 	system("Pause");
 	return 0;
+}
+
+std::vector<std::wstring> getFoldersFromUserSpecifiedDirectory() {
+	std::vector<std::wstring> folders;
+	IFileDialog *pfd = NULL;
+	DWORD dwOptions;
+	IShellItem *psiResult;
+	PWSTR pszFilePath = NULL;
+	HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS(&pfd));
+	assert(SUCCEEDED(hr));
+
+	if (SUCCEEDED(pfd->GetOptions(&dwOptions)))
+		pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
+	hr = pfd->Show(NULL);
+	assert(SUCCEEDED(hr));
+
+	hr = pfd->GetResult(&psiResult);
+	assert(SUCCEEDED(hr));
+	hr = psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+	assert(SUCCEEDED(hr));
+
+	std::wstring ws(pszFilePath);
+	std::wstring directoryPath(ws.begin(), ws.end()), directoryContent;
+
+	for (const auto & p : fs::directory_iterator(directoryPath)) {
+		directoryContent = p.path().wstring();
+		if (directoryContent.substr(directoryContent.length() - 2) == L".d") {
+			folders.push_back(directoryContent);
+		}
+	}
+	return folders;
+}
+
+CComBSTR* sortFoldersByNumberInPath(std::vector<std::wstring> list, int size) {
+	CComBSTR* folders = new CComBSTR[size];
+	int position, index;
+	for (std::wstring p : list) {
+		position = p.length() - 3;
+		while (p[position] >= '0' && p[position] <= '9') {
+			position--;
+		}
+		index = stoi(p.substr(position + 1, p.length() - 3 - position));
+		folders[index - 1] = SysAllocStringLen(p.data(), p.size());
+	}
+
+	return folders;
+}
+
+bool writeArrayToMATFile(mwSize dimensions[], int numberOfDimensions, double* vals, char variableName[], MATFile &pmat) {
+	mxArray* img = mxCreateNumericArray(numberOfDimensions, dimensions, mxDOUBLE_CLASS, mxREAL);
+	assert (img != NULL);
+	double* start_of_pr = (double *)mxGetPr(img);
+	int bytes_to_copy = mxGetElementSize(img);
+	for (int i = 0; i < numberOfDimensions; i++) {
+		bytes_to_copy *= dimensions[i];
+	}
+	memcpy(start_of_pr, vals, bytes_to_copy);
+	int status = matPutVariableAsGlobal(&pmat, variableName, img);
+	delete dimensions;
+	delete vals;
+	mxDestroyArray(img);
+	return status == 0;
+}
+
+double* generateAxisArray(int length, int pixelSize) {
+	double* vals = new double[length];
+	double currentVal = pixelSize / 2;
+	for (int i = 0; i<length; i++) {
+		vals[i] = currentVal;
+		currentVal += pixelSize;
+	}
+	return vals;
 }
